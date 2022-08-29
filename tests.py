@@ -1,56 +1,88 @@
-from datetime import datetime, timedelta
+import subprocess
 import time
-import driver
+from datetime import datetime, timedelta
+from typing import Callable, List
+
 import requests
 
-from settings import APP_BASE_PORT, APP_HOST, ELECTION_TIMEOUT_MILLISECONDS, GOOSE, RANDOM_WAIT_RANGE_SECONDS, TIMEOUT_SECONDS
+import driver
+from settings import (
+    APP_BASE_PORT,
+    APP_HOST,
+    ELECTION_TIMEOUT_MILLISECONDS,
+    GOOSE,
+    RANDOM_WAIT_RANGE_SECONDS,
+    TIMEOUT_SECONDS,
+)
 
-wait_period = 2 * ELECTION_TIMEOUT_MILLISECONDS/1000 + RANDOM_WAIT_RANGE_SECONDS[1]/1000 + 0.4
-startup_time = driver.INITIAL_NODES/3
+wait_period = (
+    2 * ELECTION_TIMEOUT_MILLISECONDS / 1000 + RANDOM_WAIT_RANGE_SECONDS[1] / 1000 + 0.4
+)
+startup_time = driver.INITIAL_NODES / 3
 
-print ('Tests started')
+print("Tests started")
 
-def node_status():
+
+def node_status(out: bool = True) -> List[str]:
     statuses = []
-    print(f'Current Status {datetime.now()}')
+    if out:
+        print(f"Current Status {datetime.now()}")
     for i in range(driver.nodes):
         try:
-            response = requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + i}/status", timeout=TIMEOUT_SECONDS)
-            # status = response.json()['status']
+            response = requests.get(
+                f"http://{APP_HOST}:{APP_BASE_PORT + i}/status", timeout=TIMEOUT_SECONDS
+            )
             response_json = response.json()
-            print(f"Instance {i}: {', '.join([key + ': ' + str(response_json[key]) for key in response_json])}")
-            statuses.append(response_json['status'])
+            if out:
+                print(
+                    f"Instance {i}: {', '.join([key + ': ' + str(response_json[key]) for key in response_json])}"
+                )
+            statuses.append(response_json["status"])
         except:
             print(f"Instance {i}: Dead")
-    print()
+    if out:
+        print()
     return statuses
 
-def election_wait_test(start_time):
-    print("Beginning Election Wait Test, should expect to see all Ducks in the first pass (representing a rejected election), however, depinding on thread speed, the actual timedelta may result in a Goose.")
+
+def election_wait_test(start_time) -> None:
+    print(
+        "Beginning Election Wait Test, should expect to see all Ducks in the first pass (representing a rejected election), however, depinding on thread speed, the actual timedelta may result in a Goose."
+    )
     while datetime.now() - start_time < timedelta(seconds=3):
         node_status()
         for i in range(driver.INITIAL_NODES):
             try:
-                requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + i}/electionrandomize", timeout=TIMEOUT_SECONDS)
+                requests.get(
+                    f"http://{APP_HOST}:{APP_BASE_PORT + i}/electionrandomize",
+                    timeout=TIMEOUT_SECONDS,
+                )
             except:
                 pass
         time.sleep(wait_period)
     print("End Election Wait Test")
 
-def basic_test(start_time):
+
+def basic_test(start_time: datetime) -> None:
     print("Beginning Basic Test, should expect to see a consistent Goose")
     while datetime.now() - start_time < timedelta(seconds=3):
         node_status()
         time.sleep(wait_period)
     print("End Basic Test")
 
-def death_test(start_time: int):
-    print("Beginning Death Test, should expect to see Goose takeovers, to different instances than those killed")
+
+def death_test(start_time: datetime) -> None:
+    print(
+        "Beginning Death Test, should expect to see Goose takeovers, to different instances than those killed"
+    )
     while datetime.now() - start_time < timedelta(seconds=6):
         statuses = node_status()
         try:
             goose = statuses.index(GOOSE)
-            requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + goose}/simulatedeath/{wait_period}", timeout=TIMEOUT_SECONDS)
+            requests.get(
+                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/simulatedeath/{wait_period}",
+                timeout=TIMEOUT_SECONDS,
+            )
         except:
             pass
         time.sleep(wait_period)
@@ -58,25 +90,37 @@ def death_test(start_time: int):
         time.sleep(wait_period)
     print("End Death Test")
 
-def partition_test(start_time: int):
-    print("Beginning Partition Test, should expect to see one Goose takeover, as original Goose will be partitioned, and then current Goose joins that partition")
+
+def partition_test(start_time: datetime) -> None:
+    print(
+        "Beginning Partition Test, should expect to see one Goose takeover, as original Goose will be partitioned, and then current Goose joins that partition"
+    )
     while datetime.now() - start_time < timedelta(seconds=5):
         statuses = node_status()
         try:
             goose = statuses.index(GOOSE)
-            requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + goose}/simulatepartition/1", timeout=TIMEOUT_SECONDS)
+            requests.get(
+                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/simulatepartition/1",
+                timeout=TIMEOUT_SECONDS,
+            )
         except:
             pass
         time.sleep(wait_period)
     print("End Partition Test")
 
-def elasticity_test(start_time: int):
-    print("Beginning Elasticity Test, should expect to see node get added and removed in successive status reports")
+
+def elasticity_test(start_time: datetime) -> None:
+    print(
+        "Beginning Elasticity Test, should expect to see node get added and removed in successive status reports"
+    )
     while datetime.now() - start_time < timedelta(seconds=10):
         statuses = node_status()
         try:
             goose = statuses.index(GOOSE)
-            requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + goose}/hatchlings/{driver.nodes + 1}", timeout=TIMEOUT_SECONDS)
+            requests.get(
+                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/hatchlings/{driver.nodes + 1}",
+                timeout=TIMEOUT_SECONDS,
+            )
             driver.add_process()
         except:
             pass
@@ -84,7 +128,10 @@ def elasticity_test(start_time: int):
         statuses = node_status()
         try:
             goose = statuses.index(GOOSE)
-            requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + goose}/hatchlings/{driver.nodes - 1}", timeout=TIMEOUT_SECONDS)
+            requests.get(
+                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/hatchlings/{driver.nodes - 1}",
+                timeout=TIMEOUT_SECONDS,
+            )
             driver.delete_process()
         except:
             pass
@@ -92,52 +139,71 @@ def elasticity_test(start_time: int):
         statuses = node_status()
     print("End Elasticity Test")
 
-def complex_test(start_time: int):
-    print("Begin Complex Test, expectations will be addressed before printing out each state")
+
+def complex_test(start_time: datetime) -> None:
+    print(
+        "Begin Complex Test, expectations will be addressed before printing out each state"
+    )
     while datetime.now() - start_time < timedelta(seconds=10):
         statuses = node_status()
         try:
             goose = statuses.index(GOOSE)
-            requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + goose}/hatchlings/{driver.nodes + 1}", timeout=TIMEOUT_SECONDS)
+            requests.get(
+                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/hatchlings/{driver.nodes + 1}",
+                timeout=TIMEOUT_SECONDS,
+            )
             driver.add_process()
             time.sleep(wait_period + startup_time)
-            print ("Expect an added node")
+            print("Expect an added node")
             statuses = node_status()
         except:
             pass
         try:
             goose = statuses.index(GOOSE)
-            requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + goose}/simulatepartition/1", timeout=TIMEOUT_SECONDS)
+            requests.get(
+                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/simulatepartition/1",
+                timeout=TIMEOUT_SECONDS,
+            )
             time.sleep(wait_period)
-            print ("Expect previous Goose to be in own partition and demote itself to Duck. There should be a new Goose soon.")
+            print(
+                "Expect previous Goose to be in own partition and demote itself to Duck. There should be a new Goose soon."
+            )
             statuses = node_status()
         except:
             pass
         try:
             goose = statuses.index(GOOSE)
-            requests.get(f"http://{APP_HOST}:{APP_BASE_PORT + goose}/simulatedeath/{wait_period}", timeout=TIMEOUT_SECONDS)
+            requests.get(
+                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/simulatedeath/{wait_period}",
+                timeout=TIMEOUT_SECONDS,
+            )
             time.sleep(wait_period)
-            print ("Expect all Ducks, with Goose having been simulated dead. A new Goose will be chosen soon.")
+            print(
+                "Expect all Ducks, with Goose having been simulated dead. A new Goose will be chosen soon."
+            )
             statuses = node_status()
             time.sleep(wait_period)
         except:
             pass
+    while GOOSE not in statuses:
+        statuses = node_status(False)
     print("End Complex Test")
 
-def run_test(function, election_wait = None):
+
+def run_test(function: Callable, election_wait=None) -> None:
     try:
         driver.create_processes(election_wait)
         time.sleep(startup_time)
         function(datetime.now())
-        time.sleep(wait_period)
-        print ("Final State")
-        statuses = node_status()
+        print("Final State")
+        node_status()
         print()
     finally:
         driver.delete_processes()
 
+
 run_test(basic_test)
-run_test(election_wait_test, '0.150')
+run_test(election_wait_test, "0.150")
 run_test(death_test)
 run_test(partition_test)
 run_test(elasticity_test)
