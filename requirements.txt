@@ -1,0 +1,6 @@
+aiohttp
+fastapi
+redis
+requests
+urllib3
+uvicorn
