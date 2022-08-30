@@ -8,7 +8,7 @@ from fastapi import FastAPI
 
 from consensus_loop import ConsensusLoop
 from redis_service_discovery import RedisServiceDiscovery
-from settings import APP_BASE_PORT, APP_HOST, DEAD, DUCK, GOOSE
+from settings import APP_BASE_PORT, APP_HOST, DUCK, GOOSE
 from state import State
 
 # create FastAPI instance
@@ -39,11 +39,15 @@ async def status():
 @app.get("/heartbeat/{leader}/{term}/{hatchlings}")
 async def hearbeat(leader, term, hatchlings):
     global state
+    new_leader = int(leader)
+    new_term = int(term)
     # reject heartbeats from older terms that may have had network delay, and in the case of Goose race, ensure that new election period begins
-    if int(term) < state.term:
+    if new_term < state.term or (
+        new_term == state.term and state.status == GOOSE and state.id != new_leader
+    ):
         return {"ack": False}
-    state.leader = int(leader)
-    state.term = int(term)
+    state.leader = new_leader
+    state.term = new_term
     if state.leader != state.id:
         state.hatchlings = int(hatchlings)
         state.last_received = datetime.now()
