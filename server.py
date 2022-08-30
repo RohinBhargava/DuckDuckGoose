@@ -42,9 +42,7 @@ async def hearbeat(leader, term, hatchlings):
     new_leader = int(leader)
     new_term = int(term)
     # reject heartbeats from older terms that may have had network delay, and in the case of Goose race, ensure that new election period begins
-    if new_term < state.term or (
-        new_term == state.term and state.status == GOOSE and state.id != new_leader
-    ):
+    if new_term < state.term:
         return {"ack": False}
     state.leader = new_leader
     state.term = new_term
@@ -52,22 +50,20 @@ async def hearbeat(leader, term, hatchlings):
         state.hatchlings = int(hatchlings)
         state.last_received = datetime.now()
     state.candidate = False
-    state.voted = False
     return {"ack": True}
 
 
-# vot
+# voting api
 @app.get("/vote/{new_leader}/{term}")
-async def vote(term, new_leader):
+async def vote(new_leader, term):
     global state
     ack = False
     # on race, consider removing from candidacy
-    if state.term <= int(term) and not state.voted:
+    if state.term <= int(term) and int(term) > state.voted:
         if int(new_leader) != state.id:
             state.candidate = False
-        state.voted = True
+        state.voted = int(term)
         ack = True
-    state.voted = True
     return {"ack": ack}
 
 
@@ -92,6 +88,7 @@ async def restore(seconds: float) -> None:
     state.last_received: datetime = datetime.now()
     state.candidate: bool = False
     state.alive = True
+    state.voted = 0
 
 
 # simulate node death for a specified amount of time

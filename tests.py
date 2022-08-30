@@ -1,4 +1,3 @@
-import subprocess
 import time
 from datetime import datetime, timedelta
 from typing import Callable, List
@@ -45,12 +44,21 @@ def node_status(out: bool = True) -> List[str]:
     return statuses
 
 
+def basic_test(start_time: datetime) -> None:
+    print("Beginning Basic Test, should expect to see a consistent Goose")
+    while datetime.now() - start_time < timedelta(seconds=3):
+        statuses = node_status()
+        assert statuses.count(GOOSE) < 2
+        time.sleep(wait_period)
+    print("End Basic Test")
+
+
 def election_wait_test(start_time) -> None:
     print(
         "Beginning Election Wait Test, should expect to see all Ducks in the first pass (representing a rejected election), however, depinding on thread speed, the actual timedelta may result in a Goose."
     )
     while datetime.now() - start_time < timedelta(seconds=3):
-        node_status()
+        statuses = node_status()
         for i in range(driver.INITIAL_NODES):
             try:
                 requests.get(
@@ -59,16 +67,9 @@ def election_wait_test(start_time) -> None:
                 )
             except:
                 pass
+        assert statuses.count(GOOSE) < 2
         time.sleep(wait_period)
     print("End Election Wait Test")
-
-
-def basic_test(start_time: datetime) -> None:
-    print("Beginning Basic Test, should expect to see a consistent Goose")
-    while datetime.now() - start_time < timedelta(seconds=3):
-        node_status()
-        time.sleep(wait_period)
-    print("End Basic Test")
 
 
 def death_test(start_time: datetime) -> None:
@@ -85,8 +86,7 @@ def death_test(start_time: datetime) -> None:
             )
         except:
             pass
-        time.sleep(wait_period)
-        node_status()
+        assert statuses.count(GOOSE) < 2
         time.sleep(wait_period)
     print("End Death Test")
 
@@ -105,6 +105,7 @@ def partition_test(start_time: datetime) -> None:
             )
         except:
             pass
+        assert statuses.count(GOOSE) < 2
         time.sleep(wait_period)
     print("End Partition Test")
 
@@ -115,6 +116,7 @@ def elasticity_test(start_time: datetime) -> None:
     )
     while datetime.now() - start_time < timedelta(seconds=10):
         statuses = node_status()
+        assert statuses.count(GOOSE) < 2
         try:
             for i in range(driver.nodes):
                 requests.get(
@@ -126,6 +128,7 @@ def elasticity_test(start_time: datetime) -> None:
             pass
         time.sleep(wait_period + startup_time)
         statuses = node_status()
+        assert statuses.count(GOOSE) < 2
         try:
             goose = statuses.index(GOOSE)
             requests.get(
@@ -136,7 +139,6 @@ def elasticity_test(start_time: datetime) -> None:
         except:
             pass
         time.sleep(wait_period + startup_time)
-        statuses = node_status()
     print("End Elasticity Test")
 
 
@@ -146,6 +148,7 @@ def complex_test(start_time: datetime) -> None:
     )
     while datetime.now() - start_time < timedelta(seconds=10):
         statuses = node_status()
+        assert statuses.count(GOOSE) < 2
         try:
             for i in range(driver.nodes):
                 requests.get(
@@ -156,6 +159,7 @@ def complex_test(start_time: datetime) -> None:
             time.sleep(wait_period + startup_time)
             print("Expect an added node")
             statuses = node_status()
+            assert statuses.count(GOOSE) < 2
         except:
             pass
         try:
@@ -169,6 +173,7 @@ def complex_test(start_time: datetime) -> None:
                 "Expect previous Goose to be in own partition and demote itself to Duck. There should be a new Goose soon."
             )
             statuses = node_status()
+            assert statuses.count(GOOSE) < 2
         except:
             pass
         try:
@@ -182,11 +187,10 @@ def complex_test(start_time: datetime) -> None:
                 "Expect all Ducks, with Goose having been simulated dead. A new Goose will be chosen soon."
             )
             statuses = node_status()
+            assert statuses.count(GOOSE) < 2
             time.sleep(wait_period)
         except:
             pass
-    while GOOSE not in statuses:
-        statuses = node_status(False)
     print("End Complex Test")
 
 

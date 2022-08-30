@@ -16,7 +16,7 @@ class State:
         self.last_received: datetime = datetime.now()
         self.hatchlings: int = hatchlings
         self.candidate: bool = False
-        self.voted: bool = False
+        self.voted: int = 0
 
         self.consensus_loop = None
 
