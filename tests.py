@@ -116,11 +116,11 @@ def elasticity_test(start_time: datetime) -> None:
     while datetime.now() - start_time < timedelta(seconds=10):
         statuses = node_status()
         try:
-            goose = statuses.index(GOOSE)
-            requests.get(
-                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/hatchlings/{driver.nodes + 1}",
-                timeout=TIMEOUT_SECONDS,
-            )
+            for i in range(driver.nodes):
+                requests.get(
+                    f"http://{APP_HOST}:{APP_BASE_PORT + i}/hatchlings/{driver.nodes + 1}",
+                    timeout=TIMEOUT_SECONDS,
+                )
             driver.add_process()
         except:
             pass
@@ -147,11 +147,11 @@ def complex_test(start_time: datetime) -> None:
     while datetime.now() - start_time < timedelta(seconds=10):
         statuses = node_status()
         try:
-            goose = statuses.index(GOOSE)
-            requests.get(
-                f"http://{APP_HOST}:{APP_BASE_PORT + goose}/hatchlings/{driver.nodes + 1}",
-                timeout=TIMEOUT_SECONDS,
-            )
+            for i in range(driver.nodes):
+                requests.get(
+                    f"http://{APP_HOST}:{APP_BASE_PORT + i}/hatchlings/{driver.nodes + 1}",
+                    timeout=TIMEOUT_SECONDS,
+                )
             driver.add_process()
             time.sleep(wait_period + startup_time)
             print("Expect an added node")
@@ -196,6 +196,7 @@ def run_test(function: Callable, election_wait=None) -> None:
         time.sleep(startup_time)
         function(datetime.now())
         print("Final State")
+        time.sleep(0.5)
         node_status()
         print()
     finally:

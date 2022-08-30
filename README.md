@@ -35,6 +35,7 @@ Essentially there are three conditions:
 - Recommended to use a virtual env, e.g. venv https://docs.python.org/3/library/venv.html
 - Install requirements with `pip3 install -r requirements.txt`
 - Run `python3 driver.py`. There are settings/lifetime settings for the program in the file that are configurable.
+- Killing nodes and using using the `/simulatedeath` api have nearly the same effect (not fully idempotent).
 
 ## Automated testing:
 - Recommended to use a virtual env, e.g. venv https://docs.python.org/3/library/venv.html
@@ -45,3 +46,4 @@ Essentially there are three conditions:
 - While this solution uses Redis to simulate service discovery, in a production system, a consistent service discovery implementation should be used. DNS or a consistent Data Source was what I was envisioning here.
 - Asyncio is not the most performant implementation of async I have seen.
 - There are spots of canned code I found from stack overflow (boilerplate or syntax). All the internal logic is of my own understanding.
+- Simulating voting ties is a little difficult, since the processes start at different times. The election wait test can sometimes be a little flaky.

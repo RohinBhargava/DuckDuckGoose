@@ -32,7 +32,6 @@ async def status():
         "term": state.term,
         "partition": state.service_discovery_partition,
         "hatchlings": state.hatchlings,
-        "leader": state.leader,
     }
 
 
@@ -57,14 +56,15 @@ async def hearbeat(leader, term, hatchlings):
 @app.get("/vote/{new_leader}/{term}")
 async def vote(term, new_leader):
     global state
+    ack = False
     # on race, consider removing from candidacy
     if state.term <= int(term) and not state.voted:
         if int(new_leader) != state.id:
             state.candidate = False
         state.voted = True
-        return {"ack": True}
+        ack = True
     state.voted = True
-    return {"ack": False}
+    return {"ack": ack}
 
 
 # set the expected cluster size; this should be sent to every node in the cluster, resemblant of remote configuration
@@ -74,7 +74,6 @@ async def vote(term, new_leader):
 async def hatchlings(count):
     global state
     state.hatchlings = int(count)
-    state.term += 1
     state.last_received = datetime.now()
     return {}
 
