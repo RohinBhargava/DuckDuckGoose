@@ -41,9 +41,7 @@ async def status():
 async def hearbeat(leader, term, hatchlings):
     global state
     # reject heartbeats from older terms that may have had network delay, and in the case of Goose race, ensure that new election period begins
-    if int(term) < state.term or (
-        int(term) == state.term and state.status == GOOSE and state.id != int(leader)
-    ):
+    if int(term) < state.term:
         return {"ack": False}
     state.leader = int(leader)
     state.term = int(term)
@@ -51,6 +49,7 @@ async def hearbeat(leader, term, hatchlings):
         state.hatchlings = int(hatchlings)
         state.last_received = datetime.now()
     state.candidate = False
+    state.voted = False
     return {"ack": True}
 
 
@@ -59,10 +58,12 @@ async def hearbeat(leader, term, hatchlings):
 async def vote(term, new_leader):
     global state
     # on race, consider removing from candidacy
-    if state.term <= int(term):
+    if state.term <= int(term) and not state.voted:
         if int(new_leader) != state.id:
             state.candidate = False
+        state.voted = True
         return {"ack": True}
+    state.voted = True
     return {"ack": False}
 
 

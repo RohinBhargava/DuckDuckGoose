@@ -54,6 +54,7 @@ class ConsensusLoop:
                         # prepare self for candidacy, election period has begun
                         self.state.candidate = True
                         self.state.leader = None
+                        self.state.voted = False
                         # wait a random amount of time to prevent election contention
                         random_wait_lower, random_wait_upper = RANDOM_WAIT_RANGE_SECONDS
                         election_wait = self.state.election_wait

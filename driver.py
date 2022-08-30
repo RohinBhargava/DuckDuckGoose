@@ -4,7 +4,7 @@ import subprocess
 import time
 
 # configurable
-INITIAL_NODES = 3
+INITIAL_NODES = 5
 
 # static script that can be run standalone
 processes = []
