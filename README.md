@@ -1,22 +1,6 @@
 # DuckDuckGoose
 
-This is Rohin Bhargava's Submission for the DuckDuckGoose assignment for Sleeper.
-
-The assignment is as follows:
-## Requirements:
-- Design a system that will select a single node as a “Goose” within a cluster of nodes. Every other node should be considered a “Duck”.
-- If the Goose dies, another Duck should become the new Goose. 
-- If a dead Goose rejoins, it should become a Duck (assuming there is already another Goose)
-- There can be only one Goose, even if some working nodes are unreachable (network partition)
-- Each node should run an http server with an endpoint allowing us to check if that node is a Duck or a Goose.
-## Rules
-- You can use your language of choice
-- You can use Google/Stackoverflow/Github/etc
-- You can employ 3rd party libraries / software in your program, including full fledged applications such as databases (single node or distributed)
-- We will be evaluating your submission based on the original code that you write, so it is up to you on what you should write yourself vs what you use from a library. Please cite any copy-pasted code.
-## Ideally
-- Your design should accommodate a dynamic and changing number of nodes (elastic scale). 
-- There should be a way to make your design highly available
+This is Rohin Bhargava's Submission for the DuckDuckGoose assignment.
 
 To accomplish this assignment, I implemented a slightly modified version of the election process as specified by the Raft Consensus Algorithm:
 https://raft.github.io/raft.pdf (section 5.2)
@@ -44,6 +28,6 @@ Essentially there are three conditions:
 
 ## Comments:
 - While this solution uses Redis to simulate service discovery, in a production system, a consistent service discovery implementation should be used. DNS or a consistent Data Source was what I was envisioning here.
-- Asyncio is not the most performant implementation of async I have seen.
+- Asyncio is not a direct implementation of async I have seen in other languages (it uses a single main thread), but the decision to use python was to spin up an API quickly. In production, I would use a staticly typed language with threaded async support.
 - There are spots of canned code I found from stack overflow (boilerplate or syntax). All the internal logic is of my own understanding.
 - Simulating voting ties is a little difficult, since the processes start at different times. The election wait test can sometimes be a little flaky.
