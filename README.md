@@ -35,7 +35,7 @@ Essentially there are three conditions:
 - Recommended to use a virtual env, e.g. venv https://docs.python.org/3/library/venv.html
 - Install requirements with `pip3 install -r requirements.txt`
 - Run `python3 driver.py`. There are settings/lifetime settings for the program in the file that are configurable.
-- Killing nodes and using using the `/simulatedeath` api have nearly the same effect (not fully idempotent).
+- Killing nodes and using using the `/simulatedeath` api have nearly the same effect (not fully equal).
 
 ## Automated testing:
 - Recommended to use a virtual env, e.g. venv https://docs.python.org/3/library/venv.html
