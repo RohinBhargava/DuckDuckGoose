@@ -27,7 +27,7 @@ Essentially there are three conditions:
 - Run `python3 tests.py`. You can control settings in there or in `driver.py`. Settings are optimized for an 2021 M1 Mac with base specs.
 
 ## Comments:
-- While this solution uses Redis to simulate service discovery, in a production system, a consistent service discovery implementation should be used. DNS or a consistent Data Source was what I was envisioning here.
+- While this solution uses Redis to simulate service discovery, in a production system, a consistent service discovery implementation should be used. DNS or an available data source was what I was envisioning here.
 - Asyncio is not a direct implementation of async I have seen in other languages (it uses a single main thread), but the decision to use python was to spin up an API quickly. In production, I would use a staticly typed language with threaded async support.
 - There are spots of canned code I found from stack overflow (boilerplate or syntax). All the internal logic is of my own understanding.
 - Simulating voting ties is a little difficult, since the processes start at different times. The election wait test can sometimes be a little flaky.
